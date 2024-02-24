@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.Remote;
 using OpenQA.Selenium.Support.UI;
 using SeleniumExtras.WaitHelpers;
@@ -9,66 +10,50 @@ using System.Collections.Generic;
 
 namespace AmazonSearch
 {
-    [TestFixture]
+    [Parallelizable(ParallelScope.All)]
+    [TestFixture("chrome", "beta")]
+    [TestFixture("firefox", "89.0")]
     public class AmazonSearchTests
     {
-       // private IWebDriver driver;
-        private readonly string username = "technorahul09";
-        private readonly string accessKey = "soQh2Ttzkc2kaqtjBchfWveR58nZNq9dSoGvab1wrIKjes8axt";
-        private readonly string gridUrl = "hub.lambdatest.com/wd/hub";
-
-        public static string LT_USERNAME = Environment.GetEnvironmentVariable("LT_USERNAME") == null ? "technorahul09" : Environment.GetEnvironmentVariable("LT_USERNAME");
-        public static string LT_ACCESS_KEY = Environment.GetEnvironmentVariable("LT_ACCESS_KEY") == null ? "soQh2Ttzkc2kaqtjBchfWveR58nZNq9dSoGvab1wrIKjes8axt" : Environment.GetEnvironmentVariable("LT_ACCESS_KEY");
-        public static bool tunnel = Boolean.Parse(Environment.GetEnvironmentVariable("LT_TUNNEL") == null ? "false" : Environment.GetEnvironmentVariable("LT_TUNNEL"));
-        public static string build = Environment.GetEnvironmentVariable("LT_BUILD") == null ? "AamazonSearchIphone" : Environment.GetEnvironmentVariable("LT_BUILD");
         public static string seleniumUri = "https://hub.lambdatest.com:443/wd/hub";
 
 
         ThreadLocal<IWebDriver> driver = new ThreadLocal<IWebDriver>();
         private String browser;
         private String version;
-        private String os;
-
+        // private String os;
+        public AmazonSearchTests(string browser, string version)
+        {
+            this.browser = browser;
+            this.version = version;
+        }
 
         [SetUp]
         public void Setup()
         {
-           // ChromeOptions options = new ChromeOptions();
-           // options.BrowserVersion = "beta";
-          //  options.AcceptInsecureCertificates = true;
-            //  options.AddAdditionalOption("user", username);
-            //   options.AddAdditionalOption("accessKey", accessKey);
-            //  driver = new RemoteWebDriver(new Uri("https://" + username + ":" + accessKey + "@hub.lambdatest.com"), options);
-            //  driver = new ChromeDriver(options);
-
-            ChromeOptions capabilities = new ChromeOptions();
-            capabilities.BrowserVersion = "beta";
             Dictionary<string, object> ltOptions = new Dictionary<string, object>();
             ltOptions.Add("username", "technorahul09");
             ltOptions.Add("accessKey", "soQh2Ttzkc2kaqtjBchfWveR58nZNq9dSoGvab1wrIKjes8axt");
             ltOptions.Add("platformName", "Windows 10");
-            ltOptions.Add("project", "Untitled");
             ltOptions.Add("w3c", true);
+            ltOptions.Add("console", "true");
+            ltOptions.Add("project", "AmazonSearch");
+            ltOptions.Add("build", "AmazonSearch");
             ltOptions.Add("plugin", "c#-c#");
-            capabilities.AddAdditionalOption("LT:Options", ltOptions);
-
-            ////Requires a named tunnel.
-            //if (tunnel)
-            //{
-            //    capabilities.SetCapability("tunnel", tunnel);
-            //}
-            //if (build != null)
-            //{
-            //    capabilities.SetCapability("build", build);
-            //}
-
-
-
-            //capabilities.SetCapability("name",
-            //String.Format("{0}:{1}",
-            //TestContext.CurrentContext.Test.ClassName,
-            //TestContext.CurrentContext.Test.MethodName));
-            driver.Value = new RemoteWebDriver(new Uri(seleniumUri), capabilities);
+            if (browser.Equals("chrome", StringComparison.OrdinalIgnoreCase))
+            {
+                ChromeOptions capabilities = new ChromeOptions();
+                capabilities.BrowserVersion = version;
+                capabilities.AddAdditionalOption("LT:Options", ltOptions);
+                driver.Value = new RemoteWebDriver(new Uri(seleniumUri), capabilities);
+            }
+            else if (browser.Equals("firefox", StringComparison.OrdinalIgnoreCase))
+            {
+                FirefoxOptions options = new FirefoxOptions();
+                options.BrowserVersion = version;
+                options.AddAdditionalOption("LT:Options", ltOptions);
+                driver.Value = new RemoteWebDriver(new Uri(seleniumUri), options);
+            }
             Console.Out.WriteLine(driver);
 
         }
@@ -77,7 +62,7 @@ namespace AmazonSearch
         public void SearchForIphone15AndGetPrices()
         {
             driver.Value.Navigate().GoToUrl("https://www.amazon.com");
-            WebDriverWait wait = new WebDriverWait(driver.Value, TimeSpan.FromSeconds(10));
+            WebDriverWait wait = new WebDriverWait(driver.Value, TimeSpan.FromSeconds(30));
             IWebElement searchbox = wait.Until(ExpectedConditions.ElementIsVisible(By.Id("twotabsearchtextbox")));
 
             searchbox.SendKeys("iphone15" + Keys.Enter);
@@ -93,11 +78,11 @@ namespace AmazonSearch
             var phonePrices = (IList<object>)jsExecutor.ExecuteScript(
                 "return [...document.querySelectorAll('div[data-component-type=\"s-search-result\"] span.a-price > span.a-offscreen')].map(e => e.textContent.trim());"
                 );
-            for (int i = 0;  i< phoneNames.Count; i++)
+            for (int i = 0; i < phoneNames.Count; i++)
             {
                 Console.WriteLine(phoneNames[i] + " " + phonePrices[i]);
             }
-         }
+        }
 
         [TearDown]
         public void Cleanup()
