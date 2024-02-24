@@ -49,25 +49,13 @@ namespace AmazonSearch
             ltOptions.Add("platformName", "Windows 10");
             ltOptions.Add("project", "Untitled");
             ltOptions.Add("w3c", true);
+            ltOptions.Add("console", "true");
+            ltOptions.Add("project", "AmazonSearch");
+            ltOptions.Add("build", "AmazonSearch");
             ltOptions.Add("plugin", "c#-c#");
             capabilities.AddAdditionalOption("LT:Options", ltOptions);
 
-            ////Requires a named tunnel.
-            //if (tunnel)
-            //{
-            //    capabilities.SetCapability("tunnel", tunnel);
-            //}
-            //if (build != null)
-            //{
-            //    capabilities.SetCapability("build", build);
-            //}
-
-
-
-            //capabilities.SetCapability("name",
-            //String.Format("{0}:{1}",
-            //TestContext.CurrentContext.Test.ClassName,
-            //TestContext.CurrentContext.Test.MethodName));
+           
             driver.Value = new RemoteWebDriver(new Uri(seleniumUri), capabilities);
             Console.Out.WriteLine(driver);
 
